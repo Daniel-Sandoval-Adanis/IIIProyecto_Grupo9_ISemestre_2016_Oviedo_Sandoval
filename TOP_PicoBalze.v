@@ -18,16 +18,19 @@
 // Additional Comments: 
 //
 //////////////////////////////////////////////////////////////////////////////////
-module TOP_PicoBalze(
+module TOP_PicoBalze #(parameter N=8)(
+	input wire clk, reset,
+	output wire AD,CS,WR,RD,
+	inout [N-1:0] salient
     );
 
 //Declaración de cables
 wire	[11:0]	address;
 wire	[17:0]	instruction;
 wire			bram_enable;
-wire	[7:0]		port_id;
-wire	[7:0]		out_port;
-reg	[7:0]		in_port;
+wire	[N-1:0]		port_id;
+wire	[N-1:0]		out_port;
+reg	[N-1:0]		in_port;
 wire			write_strobe;
 wire			k_write_strobe;
 wire			read_strobe;
@@ -36,7 +39,13 @@ wire			interrupt_ack;
 wire			kcpsm6_sleep;         //See note above
 reg			kcpsm6_reset;         //See note above
 
+// Senales de conexion de los controladores
+reg	[N-1:0]	port_out00;
+reg	[N-1:0]	port_out01;
+reg	[1:0]	port_out02;
+wire	[N-1:0]	port_in00;
 
+// Para ponerlos a GND
 assign kcpsm6_sleep = 1'b0; //No se utilizan
 assign interrupt = 1'b0; // No se utilizan 
 
@@ -62,7 +71,7 @@ assign interrupt = 1'b0; // No se utilizan
 	.clk 			(clk)); 
 
 // Memoria de Programa
-  <your_program> #(
+  memoria #(
 	.C_FAMILY		   ("V6"),   	//Family 'S6' or 'V6' or 7S for 7-series
 	.C_RAM_SIZE_KWORDS	(2),  	//Program size '1', '2' or '4'
 	.C_JTAG_LOADER_ENABLE	(1))  	//Include JTAG Loader when set to '1' 
@@ -73,7 +82,20 @@ assign interrupt = 1'b0; // No se utilizan
 	.instruction 	(instruction),
 	.clk 			(clk));
 	
-
+// controlador RTC
+Controlador_RTC u1 (
+    .clk(clk), 
+    .reset(reset), 
+    .port_out00(port_out00), 
+    .port_out01(port_out01), 
+    .port_out02(port_out02), 
+    .port_in00(port_in00), 
+    .AD(AD), 
+    .CS(CS), 
+    .WR(WR), 
+    .RD(RD), 
+    .salient(salient)
+    );
 
 
 // Declaración para las entradas:
@@ -85,16 +107,7 @@ assign interrupt = 1'b0; // No se utilizan
       case (port_id[1:0]) 
       
         // Read input_port_a at port address 00 hex
-        2'b00 : in_port <= input_port_a;
-
-        // Read input_port_b at port address 01 hex
-        2'b01 : in_port <= input_port_b;
-
-        // Read input_port_c at port address 02 hex
-        2'b10 : in_port <= input_port_c;
-
-        // Read input_port_d at port address 03 hex
-        2'b11 : in_port <= input_port_d;
+        2'b00 : in_port <= port_in00;
 
         // To ensure minimum logic implementation when defining a multiplexer always
         // use don't care for any of the unused cases (although there are none in this 
@@ -116,23 +129,18 @@ assign interrupt = 1'b0; // No se utilizan
       if (write_strobe == 1'b1) begin
 
         // Write to output_port_w at port address 01 hex
-        if (port_id[0] == 1'b1) begin
-          output_port_w <= out_port;
+        if (port_id[1:0] == 2'b00) begin
+          port_out00 <= out_port;
         end
 
         // Write to output_port_x at port address 02 hex
-        if (port_id[1] == 1'b1) begin
-          output_port_x <= out_port;
+        if (port_id[1:0] == 2'b01) begin
+          port_out01 <= out_port;
         end
 
         // Write to output_port_y at port address 04 hex
-        if (port_id[2] == 1'b1) begin
-          output_port_y <= out_port;
-        end
-
-        // Write to output_port_z at port address 08 hex
-        if (port_id[3] == 1'b1) begin
-          output_port_z <= out_port;
+        if (port_id[1:0] == 2'b10) begin
+          port_out02[1:0] <= out_port[1:0];
         end
 
       end

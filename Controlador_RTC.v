@@ -18,13 +18,13 @@
 // Additional Comments: 
 //
 //////////////////////////////////////////////////////////////////////////////////
-module Controlador_RTC(
+module Controlador_RTC#(parameter N=8)(
 input wire clk,reset,
-input [7:0] port_out00,port_out01,
+input [N-1:0] port_out00,port_out01,
 input [1:0] port_out02, // En el bit 0 el I, en el bit 1 el OP.
-output [7:0] port_in00,
+output [N-1:0] port_in00,
 output AD,CS,WR,RD,
-inout [7:0] salient
+inout [N-1:0] salient
     );
 wire enviardato,leerdato;
 //FSM RTC, genera las señales de control del dispositivo
