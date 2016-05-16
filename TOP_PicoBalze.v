@@ -20,6 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 module TOP_PicoBalze #(parameter N=8)(
 	input wire clk, reset,
+	output write_strobe,read_strobe,interrupt_ack,
 	output wire AD,CS,WR,RD,
 	inout [N-1:0] salient
     );
@@ -31,13 +32,13 @@ wire			bram_enable;
 wire	[N-1:0]		port_id;
 wire	[N-1:0]		out_port;
 reg	[N-1:0]		in_port;
-wire			write_strobe;
+//wire			write_strobe;
 wire			k_write_strobe;
-wire			read_strobe;
+//wire			read_strobe;
 wire			interrupt;            //See note above
-wire			interrupt_ack;
+//wire			interrupt_ack;
 wire			kcpsm6_sleep;         //See note above
-reg			kcpsm6_reset;         //See note above
+wire			kcpsm6_reset;         //See note above
 
 // Senales de conexion de los controladores
 reg	[N-1:0]	port_out00;
@@ -72,7 +73,7 @@ assign interrupt = 1'b0; // No se utilizan
 
 // Memoria de Programa
   memoria #(
-	.C_FAMILY		   ("V6"),   	//Family 'S6' or 'V6' or 7S for 7-series
+	.C_FAMILY		   ("S6"),   	//Family 'S6' or 'V6' or 7S for 7-series
 	.C_RAM_SIZE_KWORDS	(2),  	//Program size '1', '2' or '4'
 	.C_JTAG_LOADER_ENABLE	(1))  	//Include JTAG Loader when set to '1' 
   program_rom (    				//Name to match your PSM file
@@ -126,7 +127,7 @@ Controlador_RTC u1 (
   begin
 
       // 'write_strobe' is used to qualify all writes to general output ports.
-      if (write_strobe == 1'b1) begin
+      if (k_write_strobe == 1'b1) begin
 
         // Write to output_port_w at port address 01 hex
         if (port_id[1:0] == 2'b00) begin

@@ -1,0 +1,63 @@
+;======================================================================================================================================================
+; PicoBlaze conectado con RTC, Teclado PS2 y VGA
+;======================================================================================================================================================
+;Creadores: Marco Oviedo. Daniel Sandoval.
+;======================================================================================================================================================
+; Datos constantes
+;======================================================================================================================================================
+;alias Direcciones de Memoria
+;======================================================================================================================================================
+;alias Registros
+#EQU datos,		s0
+#EQU contador,		s0
+;======================================================================================================================================================
+;alias Puertos
+
+#EQU datoinRTC,		00
+#EQU datooutRTC,		00
+#EQU direccionRTC,		01
+#EQU controlRTC,		02
+;======================================================================================================================================================
+; Explicación del Programa principal
+;======================================================================================================================================================
+; main:
+;		-inicializa
+;		-
+;		-
+;		-
+;======================================================================================================================================================
+
+call inicia
+siempre:
+	jump siempre
+	
+	
+inicia:
+	wrprt 02,direccionRTC
+	wrprt 16,datooutRTC
+	wrprt 01,controlRTC
+	wrprt 00,controlRTC
+	call retardo
+	wrprt 02,direccionRTC
+	wrprt 00,datooutRTC
+	wrprt 01,controlRTC
+	wrprt 00,controlRTC
+	call retardo
+	wrprt 16,direccionRTC
+	wrprt 210,datooutRTC
+	wrprt 01,controlRTC
+	wrprt 00,controlRTC
+	call retardo
+	wrprt 00,direccionRTC
+	wrprt 00,datooutRTC
+	wrprt 01,controlRTC
+	wrprt 00,controlRTC
+	call retardo
+	ret
+	
+retardo:
+	load contador,14  ; para esperar a que el control realize la comunicación
+resta:
+	sub contador,01
+	jump nz resta
+	ret	
