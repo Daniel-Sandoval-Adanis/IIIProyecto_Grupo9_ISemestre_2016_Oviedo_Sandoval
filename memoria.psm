@@ -6,9 +6,15 @@
 ; Datos constantes
 ;======================================================================================================================================================
 ;alias Direcciones de Memoria
+#EQU hora,		00
+#EQU minutos,		01
+#EQU segundos,		02
+#EQU dia,		03
+#EQU mes,		04
+#EQU ano,		05
 ;======================================================================================================================================================
 ;alias Registros
-#EQU datos,		s0
+#EQU datoin,		s0
 #EQU contador,		s1
 #EQU direccion,		s2
 #EQU dato,		s3
@@ -32,6 +38,7 @@
 call inicia
 call prograini
 siempre:
+	call Leer
 	jump siempre
 	
 	
@@ -54,21 +61,44 @@ inicia:
 prograini:
 	load direccion,35;Direccion hora
 	load dato,00
-	call RTCout		
+	call RTCout	
 	load direccion,34;Direccion segundos
 	call RTCout	
 	load direccion,33;Direccion minutos
 	call RTCout	
 	load direccion,36;Direccion dia
-	call RTCout	
+	call RTCout
 	load direccion,37;Direccion mes 		
 	call RTCout
 	load direccion,38;Direccion año		
 	call RTCout
-	load direccion,241;Comando para escribir
+	load direccion,241;Comando para escribir F0
 	load dato,241
 	call RTCout
 	ret			
+
+Leer:
+	load direccion,241;Comando para leer F0
+	call RTCin
+	load direccion,35;Direccion hora
+	call RTCin		
+	wrmem datoin,(hora)	
+	load direccion,34;Direccion minutos
+	call RTCin	
+	wrmem datoin,(minutos)
+	load direccion,33;Direccion segundos
+	call RTCin
+	wrmem datoin,(segundos)	
+	load direccion,36;Direccion dia
+	call RTCin	
+	wrmem datoin,(dia)	
+	load direccion,37;Direccion mes 		
+	call RTCin
+	wrmem datoin,(mes)
+	load direccion,38;Direccion año		
+	call RTCin
+	wrmem datoin,(ano)
+	ret	
 
 ;Envia los datos al controlador del RTC
 RTCout:
@@ -77,6 +107,15 @@ RTCout:
 	wrprt 01,controlRTC
 	wrprt 00,controlRTC
 	call retardo
+	ret
+	
+; Lee los datos del RTC y los guarda en un registro
+RTCin:
+	wrprt direccion,direccionRTC
+	wrprt 03,controlRTC
+	wrprt 02,controlRTC
+	call retardo
+	rdprt datoin,datoinRTC	
 	ret
 	
 retardo:
