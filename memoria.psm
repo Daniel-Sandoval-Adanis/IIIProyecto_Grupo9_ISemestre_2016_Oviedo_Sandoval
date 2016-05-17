@@ -9,7 +9,9 @@
 ;======================================================================================================================================================
 ;alias Registros
 #EQU datos,		s0
-#EQU contador,		s0
+#EQU contador,		s1
+#EQU direccion,		s2
+#EQU dato,		s3
 ;======================================================================================================================================================
 ;alias Puertos
 
@@ -28,35 +30,57 @@
 ;======================================================================================================================================================
 
 call inicia
+call prograini
 siempre:
 	jump siempre
 	
 	
 inicia:
-	wrprt 02,direccionRTC
-	wrprt 16,datooutRTC
-	wrprt 01,controlRTC
-	wrprt 00,controlRTC
-	call retardo
-	wrprt 02,direccionRTC
-	wrprt 00,datooutRTC
-	wrprt 01,controlRTC
-	wrprt 00,controlRTC
-	call retardo
-	wrprt 16,direccionRTC
-	wrprt 210,datooutRTC
-	wrprt 01,controlRTC
-	wrprt 00,controlRTC
-	call retardo
-	wrprt 00,direccionRTC
-	wrprt 00,datooutRTC
+	load direccion,02
+	load dato,16
+	call RTCout
+	load direccion,02
+	load dato,00
+	call RTCout	
+	load direccion,16
+	load dato,210
+	call RTCout
+	load direccion,00
+	load dato,00
+	call RTCout
+	ret
+
+;Programa inicial
+prograini:
+	load direccion,35;Direccion hora
+	load dato,00
+	call RTCout		
+	load direccion,34;Direccion segundos
+	call RTCout	
+	load direccion,33;Direccion minutos
+	call RTCout	
+	load direccion,36;Direccion dia
+	call RTCout	
+	load direccion,37;Direccion mes 		
+	call RTCout
+	load direccion,38;Direccion año		
+	call RTCout
+	load direccion,241;Comando para escribir
+	load dato,241
+	call RTCout
+	ret			
+
+;Envia los datos al controlador del RTC
+RTCout:
+	wrprt direccion,direccionRTC
+	wrprt dato,datooutRTC
 	wrprt 01,controlRTC
 	wrprt 00,controlRTC
 	call retardo
 	ret
 	
 retardo:
-	load contador,14  ; para esperar a que el control realize la comunicación
+	load contador,10  ; para esperar a que el control realize la comunicación
 resta:
 	sub contador,01
 	jump nz resta
