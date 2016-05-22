@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 module TOP_PicoBalze #(parameter N=8)(
 	input wire clk, reset,
-	output write_strobe,read_strobe,interrupt_ack,
+	output read_strobe,interrupt_ack,
 	output wire AD,CS,WR,RD,
 	inout [N-1:0] salient
     );
@@ -32,7 +32,7 @@ wire			bram_enable;
 wire	[N-1:0]		port_id;
 wire	[N-1:0]		out_port;
 reg	[N-1:0]		in_port;
-//wire			write_strobe;
+wire			write_strobe;
 wire			k_write_strobe;
 //wire			read_strobe;
 wire			interrupt;            //See note above
@@ -127,7 +127,7 @@ Controlador_RTC u1 (
   begin
 
       // 'write_strobe' is used to qualify all writes to general output ports.
-      if (k_write_strobe == 1'b1) begin
+      if (write_strobe == 1'b1 || k_write_strobe == 1'b1 ) begin
 
         // Write to output_port_w at port address 01 hex
         if (port_id[1:0] == 2'b00) begin

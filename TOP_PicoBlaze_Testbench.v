@@ -29,7 +29,6 @@ module TOP_PicoBlaze_Testbench;
 	reg reset;
 
 	// Outputs
-	wire write_strobe;
 	wire read_strobe;
 	wire interrupt_ack;
 	wire AD;
@@ -43,8 +42,7 @@ module TOP_PicoBlaze_Testbench;
 	// Instantiate the Unit Under Test (UUT)
 	TOP_PicoBalze uut (
 		.clk(clk), 
-		.reset(reset), 
-		.write_strobe(write_strobe), 
+		.reset(reset),  
 		.read_strobe(read_strobe), 
 		.interrupt_ack(interrupt_ack), 
 		.AD(AD), 
@@ -67,7 +65,7 @@ module TOP_PicoBlaze_Testbench;
 		reset = 0;
 
 		// Wait 100 ns for global reset to finish
-		#3000;
+		#15000;
       $stop;
 		// Add stimulus here
 

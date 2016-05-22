@@ -12,6 +12,9 @@
 #EQU dia,		03
 #EQU mes,		04
 #EQU ano,		05
+#EQU horacrono,		06
+#EQU minutoscrono,		07
+#EQU segundoscrono,		08
 ;======================================================================================================================================================
 ;alias Registros
 #EQU datoin,		s0
@@ -25,6 +28,15 @@
 #EQU datooutRTC,		00
 #EQU direccionRTC,		01
 #EQU controlRTC,		02
+#EQU horaout,		03
+#EQU minutosout,		04
+#EQU segundosout,		05
+#EQU diaout,		06
+#EQU mesout,		07
+#EQU anoout,		08
+#EQU horacronoout,		09
+#EQU minutoscronoout,		10
+#EQU segundoscronoout,		11
 ;======================================================================================================================================================
 ; Explicación del Programa principal
 ;======================================================================================================================================================
@@ -39,6 +51,7 @@ call inicia
 call prograini
 siempre:
 	call Leer
+	call VGAout
 	jump siempre
 	
 	
@@ -72,13 +85,19 @@ prograini:
 	call RTCout
 	load direccion,38;Direccion año		
 	call RTCout
-	load direccion,241;Comando para escribir F0
-	load dato,241
+	load direccion,67;Direccion horacrono		
+	call RTCout
+	load direccion,66;Direccion minutoscrono		
+	call RTCout
+	load direccion,65;Direccion segundoscrono		
+	call RTCout
+	load direccion,240;Comando para escribir F0
+	load dato,240
 	call RTCout
 	ret			
 
 Leer:
-	load direccion,241;Comando para leer F0
+	load direccion,240;Comando para leer F0
 	call RTCin
 	load direccion,35;Direccion hora
 	call RTCin		
@@ -98,7 +117,37 @@ Leer:
 	load direccion,38;Direccion año		
 	call RTCin
 	wrmem datoin,(ano)
+	load direccion,67;Direccion horacrono
+	call RTCin		
+	wrmem datoin,(horacrono)	
+	load direccion,66 ;Direccion minutoscrono
+	call RTCin	
+	wrmem datoin,(minutoscrono)
+	load direccion,65 ;Direccion segundoscrono
+	call RTCin
+	wrmem datoin,(segundoscrono)
 	ret	
+
+VGAout:
+	rdmem dato,(hora)
+	wrprt dato,horaout
+	rdmem dato,(minutos)
+	wrprt dato,minutosout
+	rdmem dato,(segundos)
+	wrprt dato,segundosout
+	rdmem dato,(dia)
+	wrprt dato,diaout
+	rdmem dato,(mes)
+	wrprt dato,mesout
+	rdmem dato,(ano)
+	wrprt dato,anoout
+	rdmem dato,(horacrono)
+	wrprt dato,horacronoout
+	rdmem dato,(minutoscrono)
+	wrprt dato,minutoscronoout
+	rdmem dato,(segundoscrono)
+	wrprt dato,segundoscronoout
+	ret
 
 ;Envia los datos al controlador del RTC
 RTCout:
