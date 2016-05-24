@@ -19,7 +19,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 module TOP_PicoBalze #(parameter N=8)(
-	input wire clk, reset,
+	input wire clk, reset,ps2d,ps2c,
 	output read_strobe,interrupt_ack,
 	output wire AD,CS,WR,RD,
 	inout [N-1:0] salient
@@ -41,10 +41,16 @@ wire			kcpsm6_sleep;         //See note above
 wire			kcpsm6_reset;         //See note above
 
 // Senales de conexion de los controladores
+//salidas
 reg	[N-1:0]	port_out00;
 reg	[N-1:0]	port_out01;
 reg	[1:0]	port_out02;
+//Faltan los de la VGA
+reg	[N-1:0] port_out0E;
+//Entradas
 wire	[N-1:0]	port_in00;
+wire	[N-1:0]  port_in01;
+wire	[N-1:0]  port_in02;
 
 // Para ponerlos a GND
 assign kcpsm6_sleep = 1'b0; //No se utilizan
@@ -75,7 +81,7 @@ assign interrupt = 1'b0; // No se utilizan
   memoria #(
 	.C_FAMILY		   ("S6"),   	//Family 'S6' or 'V6' or 7S for 7-series
 	.C_RAM_SIZE_KWORDS	(2),  	//Program size '1', '2' or '4'
-	.C_JTAG_LOADER_ENABLE	(1))  	//Include JTAG Loader when set to '1' 
+	.C_JTAG_LOADER_ENABLE	(0))  	//Include JTAG Loader when set to '1' 
   program_rom (    				//Name to match your PSM file
  	.rdl 			(kcpsm6_reset),
 	.enable 		(bram_enable),
@@ -98,6 +104,17 @@ Controlador_RTC u1 (
     .salient(salient)
     );
 
+// Controlador Teclado PS2
+kb_code u2 (
+    .clk(clk), 
+    .reset(reset), 
+    .ps2d(ps2d), 
+    .ps2c(ps2c), 
+    .port_in02(port_in02), 
+    .port_in01(port_in01), 
+    .port_out0E(port_out0E)
+    );
+
 
 // Declaración para las entradas:
 
@@ -109,7 +126,8 @@ Controlador_RTC u1 (
       
         // Read input_port_a at port address 00 hex
         2'b00 : in_port <= port_in00;
-
+		  2'b01 : in_port <= port_in01;
+		  2'b10 : in_port <= port_in02;
         // To ensure minimum logic implementation when defining a multiplexer always
         // use don't care for any of the unused cases (although there are none in this 
         // example).
@@ -130,18 +148,22 @@ Controlador_RTC u1 (
       if (write_strobe == 1'b1 || k_write_strobe == 1'b1 ) begin
 
         // Write to output_port_w at port address 01 hex
-        if (port_id[1:0] == 2'b00) begin
+        if (port_id[3:0] == 4'b0000) begin
           port_out00 <= out_port;
         end
 
         // Write to output_port_x at port address 02 hex
-        if (port_id[1:0] == 2'b01) begin
+        if (port_id[3:0] == 4'b0001) begin
           port_out01 <= out_port;
         end
 
         // Write to output_port_y at port address 04 hex
-        if (port_id[1:0] == 2'b10) begin
+        if (port_id[3:0] == 4'b0010) begin
           port_out02[1:0] <= out_port[1:0];
+        end
+
+        if (port_id[3:0] == 4'b1110) begin
+          port_out0E <= out_port;
         end
 
       end

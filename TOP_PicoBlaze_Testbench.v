@@ -27,6 +27,8 @@ module TOP_PicoBlaze_Testbench;
 	// Inputs
 	reg clk;
 	reg reset;
+	reg ps2d;
+	reg ps2c;
 
 	// Outputs
 	wire read_strobe;
@@ -42,7 +44,9 @@ module TOP_PicoBlaze_Testbench;
 	// Instantiate the Unit Under Test (UUT)
 	TOP_PicoBalze uut (
 		.clk(clk), 
-		.reset(reset),  
+		.reset(reset),
+		.ps2d(ps2d),
+		.ps2c(ps2c),
 		.read_strobe(read_strobe), 
 		.interrupt_ack(interrupt_ack), 
 		.AD(AD), 
@@ -63,6 +67,8 @@ module TOP_PicoBlaze_Testbench;
 		// Initialize Inputs
 		clk = 0;
 		reset = 0;
+		ps2d=0;
+		ps2c=0;
 
 		// Wait 100 ns for global reset to finish
 		#15000;
