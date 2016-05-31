@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 module TOP_PicoBalze #(parameter N=8)(
 	input wire clk, reset,ps2d,ps2c,
-	output read_strobe,interrupt_ack,
+	output read_strobe,interrupt_ack,ampPWM,
 	output [7:0] text_rgb,
 	output wire AD,CS,WR,RD,hsync,vsync,
 	inout [N-1:0] salient
@@ -41,6 +41,7 @@ wire			interrupt;            //See note above
 wire			kcpsm6_sleep;         //See note above
 wire			kcpsm6_reset;         //See note above
 wire 			rdl;
+wire        salida;
 
 // Senales de conexion de los controladores
 //salidas
@@ -154,12 +155,29 @@ imagenes u3 (
     .dig17(port_out0D[3:0]), 
     .clk(clk), 
     .reset_i(reset), 
-    .dato0(8'd0), 
-    .dato2(8'd0), 
-    .crontermino(port_out0F), 
+    .dato0(port_out03), 
+    .dato2(port_out05), 
+    .crontermino(salida), 
     .hsync_o(hsync), 
     .vsync_o(vsync)
     );
+	 
+// oscilador para alarma
+
+alarmacrono u4 (
+    .clk(clk), 
+    .reset(reset), 
+    .IRQN(port_out0F), 
+    .salida(salida)
+    );
+	 
+// Oscilador para alarma sonora
+contador u5 (
+    .clk(clk), 
+    .hush(salida), 
+    .ampPWM(ampPWM)
+    );
+
 // Declaración para las entradas:
 
 

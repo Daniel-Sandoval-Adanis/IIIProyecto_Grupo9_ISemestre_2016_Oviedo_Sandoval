@@ -128,6 +128,7 @@ cronometro:
 	comp dato,00
 	jump nz cronometro 
 	wrprt 0x01,termine
+	wrprt 0x00,termine
 	ret
 	
 ;Programa inicial
@@ -185,10 +186,11 @@ reloj:
 	sl0 x
 	sl0 x
 	sl0 x	
-	or x,y
+	or x,y ; aqui se puede trabajar lo del maximo con una variable en guardar
 	wrmem x,(w)
 	call VGAout
 	call prograini
+	load datoin,0x00
 	ret
 
 decodificar:
