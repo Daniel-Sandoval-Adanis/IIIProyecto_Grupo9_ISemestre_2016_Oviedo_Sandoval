@@ -118,6 +118,16 @@ encender:
 cronometro:
 	call Leer
 	call VGAout
+	rdprt dato,E_dato
+	comp dato,0x01
+	jump nz evalua
+	rdprt datoin,code_tecla
+	wrprt 0x01,leido
+	wrprt 0x00,leido
+	comp datoin,0x2C
+	jump z final
+	
+evalua:
 	rdmem dato,(horacrono)
 	comp dato,00
 	jump nz cronometro
@@ -129,6 +139,7 @@ cronometro:
 	jump nz cronometro 
 	wrprt 0x01,termine
 	wrprt 0x00,termine
+final:
 	ret
 	
 ;Programa inicial
