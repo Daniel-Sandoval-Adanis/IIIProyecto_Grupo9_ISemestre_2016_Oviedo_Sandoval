@@ -15,28 +15,47 @@
 #EQU horacrono,		06
 #EQU minutoscrono,		07
 #EQU segundoscrono,		08
+#EQU estado,		09
 ;======================================================================================================================================================
 ;alias Registros
 #EQU datoin,		s0
 #EQU contador,		s1
 #EQU direccion,		s2
 #EQU dato,		s3
+#EQU x,		s4
+#EQU y,		s5
+#EQU w,		s6
 ;======================================================================================================================================================
 ;alias Puertos
+;Entradas
+;RTC
+#EQU datoinRTC,		000
+;PS2
+#EQU E_dato,		001
+#EQU code_tecla,		002
 
-#EQU datoinRTC,		00
-#EQU datooutRTC,		00
-#EQU direccionRTC,		01
-#EQU controlRTC,		02
-#EQU horaout,		03
-#EQU minutosout,		04
-#EQU segundosout,		05
-#EQU diaout,		06
-#EQU mesout,		07
-#EQU anoout,		08
-#EQU horacronoout,		09
-#EQU minutoscronoout,		10
-#EQU segundoscronoout,		11
+;Salidas
+;RTC
+#EQU datooutRTC,		000
+#EQU direccionRTC,		001
+#EQU controlRTC,		002
+;VGA
+#EQU formato,		003
+#EQU horaout,		004
+#EQU ampm,		005
+#EQU minutosout,		006
+#EQU segundosout,		007
+#EQU diaout,		008
+#EQU mesout,		009
+#EQU anoout,		010
+#EQU horacronoout,		011
+#EQU minutoscronoout,		012
+#EQU segundoscronoout,		013
+
+;PS2
+#EQU leido,		014
+#EQU termine,		015
+
 ;======================================================================================================================================================
 ; Explicación del Programa principal
 ;======================================================================================================================================================
@@ -46,14 +65,27 @@
 ;		-
 ;		-
 ;======================================================================================================================================================
-
+ 
+call VGAout
 call inicia
 call prograini
 siempre:
 	call Leer
 	call VGAout
+	rdprt dato,E_dato
+	comp dato,0x01
+	call z teclado
 	jump siempre
 	
+teclado:
+	rdprt datoin,code_tecla
+	wrprt 0x01,leido
+	wrprt 0x00,leido
+	comp datoin,0x4D
+	call z reloj
+	comp datoin,0x43
+	call z encender
+	ret
 	
 inicia:
 	load direccion,02
@@ -70,31 +102,158 @@ inicia:
 	call RTCout
 	ret
 
+; cronometro
+encender:
+	load dato,08
+	wrmem dato,(estado) ; falta trabajar lo de 12-24, quiero primero leer, luego concatenar
+	load direccion,0x00	
+	rdmem dato,(estado)
+	call RTCout
+	call cronometro 
+	load dato,00
+	load direccion,0x00
+	call RTCout
+	ret
+	
+cronometro:
+	call Leer
+	call VGAout
+	rdmem dato,(horacrono)
+	comp dato,00
+	jump nz cronometro
+	rdmem dato,(minutoscrono)
+	comp dato,00
+	jump nz cronometro
+	rdmem dato,(segundoscrono)
+	comp dato,00
+	jump nz cronometro 
+	wrprt 0x01,termine
+	ret
+	
 ;Programa inicial
 prograini:
 	load direccion,35;Direccion hora
-	load dato,00
+	rdmem dato,(hora)
 	call RTCout	
-	load direccion,34;Direccion segundos
+	load direccion,34;Direccion minutos
+	rdmem dato,(minutos)
 	call RTCout	
-	load direccion,33;Direccion minutos
+	load direccion,33;Direccion segundos
+	rdmem dato,(segundos)
 	call RTCout	
 	load direccion,36;Direccion dia
+	rdmem dato,(dia)
 	call RTCout
-	load direccion,37;Direccion mes 		
+	load direccion,37;Direccion mes
+	rdmem dato,(mes) 		
 	call RTCout
-	load direccion,38;Direccion año		
+	load direccion,38;Direccion año	
+	rdmem dato,(ano)	
 	call RTCout
-	load direccion,67;Direccion horacrono		
+	load direccion,67;Direccion horacrono
+	rdmem dato,(horacrono)		
 	call RTCout
-	load direccion,66;Direccion minutoscrono		
+	load direccion,66;Direccion minutoscrono
+	rdmem dato,(minutoscrono)		
 	call RTCout
-	load direccion,65;Direccion segundoscrono		
+	load direccion,65;Direccion segundoscrono
+	rdmem dato,(segundoscrono)		
 	call RTCout
 	load direccion,240;Comando para escribir F0
 	load dato,240
 	call RTCout
 	ret			
+; Inicia Programacion
+decision:
+	rdprt dato,E_dato
+	comp dato,0x01
+	jump nz decision
+	rdprt datoin,code_tecla
+	wrprt 0x01,leido
+	wrprt 0x00,leido
+	ret
+
+reloj:
+	call decision	
+	call guardar
+	call decision
+	call decodificar
+	load x,y
+	call decision
+	call decodificar 
+	sl0 x
+	sl0 x
+	sl0 x
+	sl0 x	
+	or x,y
+	wrmem x,(w)
+	call VGAout
+	call prograini
+	ret
+
+decodificar:
+	load y,0x1
+	comp datoin,0x16
+	ret z
+	load y,0x2
+	comp datoin,0x1E
+	ret z
+	load y,0x3
+	comp datoin,0x26
+	ret z
+	load y,0x4
+	comp datoin,0x25
+	ret z
+	load y,0x5
+	comp datoin,0x2E
+	ret z
+	load y,0x6
+	comp datoin,0x36
+	ret z
+	load y,0x7
+	comp datoin,0x3D
+	ret z
+	load y,0x8
+	comp datoin,0x3E
+	ret z
+	load y,0x9
+	comp datoin,0x46
+	ret z
+	load y,0x0
+	ret	
+
+guardar:
+	load w,0x0
+	comp datoin,0x33 ; h es hora
+	ret z
+	load w,0x1
+	comp datoin,0x31 ; n es minutos
+	ret z
+	load w,0x2
+	comp datoin,0x1B; s es segundos
+	ret z
+	load w,0x3
+	comp datoin,0x23 ; d es dia
+	ret z
+	load w,0x4
+	comp datoin,0x3A ; m es mes
+	ret z
+	load w,0x5
+	comp datoin,0x1C ; a es año
+	ret z
+	load w,0x6
+	comp datoin,0x22 ; x es hora crono
+	ret z
+	load w,0x7
+	comp datoin,0x35 ; y es minutos crono
+	ret z
+	load w,0x8
+	comp datoin,0x1A ; z es segundos crono
+	ret z
+	load w,0x30 ; basura
+	ret	
+	
+; termina programacion
 
 Leer:
 	load direccion,240;Comando para leer F0

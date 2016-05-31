@@ -33,10 +33,13 @@ module TOP_PicoBlaze_Testbench;
 	// Outputs
 	wire read_strobe;
 	wire interrupt_ack;
+	wire [2:0] text_rgb;
 	wire AD;
 	wire CS;
 	wire WR;
 	wire RD;
+	wire hsync;
+	wire vsync;
 
 	// Bidirs
 	wire [7:0] salient;
@@ -48,11 +51,14 @@ module TOP_PicoBlaze_Testbench;
 		.ps2d(ps2d),
 		.ps2c(ps2c),
 		.read_strobe(read_strobe), 
-		.interrupt_ack(interrupt_ack), 
+		.interrupt_ack(interrupt_ack),
+		.text_rgb(text_rgb),
 		.AD(AD), 
 		.CS(CS), 
 		.WR(WR), 
-		.RD(RD), 
+		.RD(RD),
+		.hsync(hsync),
+		.vsync(vsync),
 		.salient(salient)
 	);
 
@@ -66,12 +72,14 @@ module TOP_PicoBlaze_Testbench;
 	initial begin
 		// Initialize Inputs
 		clk = 0;
-		reset = 0;
+		reset = 1;
 		ps2d=0;
 		ps2c=0;
+		#50;
+		reset=0;
 
 		// Wait 100 ns for global reset to finish
-		#15000;
+		#20000;
       $stop;
 		// Add stimulus here
 
